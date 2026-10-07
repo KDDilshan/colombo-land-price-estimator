@@ -1,5 +1,7 @@
 # Colombo Land Price Estimator
 
+[![tests](https://github.com/KDDilshan/colombo-land-price-estimator/actions/workflows/tests.yml/badge.svg)](https://github.com/KDDilshan/colombo-land-price-estimator/actions/workflows/tests.yml)
+
 A tuned XGBoost model over 187 GN divisions in Colombo (50 features, including
 seven environmental and spatial variables), with each GN's past flooding shown
 from official Survey Department and DMC records, served as a SaaS product:
@@ -47,8 +49,10 @@ login, a working free-tier estimator with quota enforcement — everything
 except "Sign in with Google", Stripe checkout, and outgoing email (password
 reset links print to the console instead).
 
-Run the model's own tests any time with `pytest test_predictor.py` — these
-never touch the SaaS layer.
+Run the model's own tests any time with `pytest test_predictor.py` (after
+`pip install -r requirements-dev.txt`) — these never touch the SaaS layer.
+GitHub Actions runs them, plus an app start-up check, on every push and pull
+request (`.github/workflows/tests.yml`).
 
 ## Wiring up the real integrations
 
