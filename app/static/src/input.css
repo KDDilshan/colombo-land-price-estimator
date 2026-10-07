@@ -1,0 +1,430 @@
+@import "tailwindcss";
+
+/* The inline script in base.html always sets data-theme="dark|light" on <html>
+   before first paint (falling back to the OS preference), so a plain attribute
+   selector is enough - no need to also branch on prefers-color-scheme here. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  /* semantic colour roles - light values; overridden under [data-theme="dark"] below */
+  --color-ink: #18181b;
+  --color-muted: #71717a;
+  --color-line: #e4e4e7;
+  --color-bg: #fafafa;
+  --color-card: #ffffff;
+  --color-card-alt: #f4f4f5;
+  --color-accent: #2563eb;
+  --color-accent-dark: #1d4ed8;
+  --color-accent-soft: #eff4ff;
+  --color-warn-bg: #fffbeb;
+  --color-warn-line: #d69e2e;
+  --color-warn-ink: #92620a;
+  --color-error: #b91c1c;
+  --color-error-bg: #fef2f2;
+  --color-info-bg: #eff4ff;
+  --color-pro: #7c3aed;
+  --color-pro-soft: #f3ecfe;
+
+  /* one consistent radius scale, used everywhere instead of ad-hoc values */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.625rem;
+  --radius-lg: 0.875rem;
+}
+
+:root[data-theme="dark"] {
+  --color-ink: #f4f4f5;
+  --color-muted: #a1a1aa;
+  --color-line: #27272a;
+  --color-bg: #09090b;
+  --color-card: #18181b;
+  --color-card-alt: #131316;
+  --color-accent: #3b82f6;
+  --color-accent-dark: #60a5fa;
+  --color-accent-soft: #172554;
+  --color-warn-bg: #271f0a;
+  --color-warn-line: #b7871f;
+  --color-warn-ink: #f0c869;
+  --color-error: #f87171;
+  --color-error-bg: #2a1416;
+  --color-info-bg: #172554;
+  --color-pro: #a78bfa;
+  --color-pro-soft: #241b3d;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-ink);
+  }
+
+  h1, h2, h3 {
+    letter-spacing: -0.01em;
+  }
+
+  /* the estimator tool (#app-shell) is a fixed full-viewport map + panel layout -
+     a footer below it, or the normal centred page padding, would just add an
+     awkward scroll gap - so both are suppressed on that page only */
+  body:has(#app-shell) footer {
+    display: none;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  @keyframes flash-in {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+}
+
+@layer components {
+  /* ------------------------------------------------------------- buttons */
+
+  /* .btn only sets the shared shape/behaviour - always pair it with a colour
+     variant in markup, e.g. class="btn btn-primary", since Tailwind v4 doesn't
+     let @apply chain one custom component class into another. */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-md px-4 py-2.5
+           text-sm font-semibold transition-colors duration-150
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2
+           focus-visible:ring-offset-bg disabled:pointer-events-none disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply bg-accent text-white hover:bg-accent-dark
+           focus-visible:ring-accent;
+  }
+  .btn-secondary {
+    @apply bg-card text-ink border border-line
+           hover:bg-card-alt focus-visible:ring-accent;
+  }
+  .btn-google {
+    @apply w-full bg-card text-ink border border-line
+           hover:bg-card-alt focus-visible:ring-accent;
+  }
+  .btn-disabled {
+    @apply pointer-events-none opacity-50;
+  }
+  .link-btn {
+    @apply text-sm text-ink hover:text-accent transition-colors
+           bg-transparent border-0 p-0 cursor-pointer;
+  }
+  .icon-btn {
+    @apply inline-flex h-8 w-8 items-center justify-center rounded-full
+           border border-line text-muted transition-colors
+           hover:border-accent hover:text-accent
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent;
+  }
+
+  /* --------------------------------------------------------------- badges */
+
+  .badge {
+    @apply ml-1.5 inline-block rounded-full bg-pro px-2 py-0.5
+           text-[10px] font-bold uppercase tracking-wide text-white align-middle;
+  }
+  .badge-off {
+    @apply inline-block rounded-full bg-card-alt px-2 py-0.5
+           text-xs text-muted;
+  }
+  .badge-plan {
+    @apply inline-block flex-none rounded-full px-3 py-1 text-xs font-semibold;
+  }
+  .badge-plan-pro {
+    @apply bg-pro-soft text-pro;
+  }
+  .badge-plan-free {
+    @apply bg-card-alt text-muted;
+  }
+
+  /* ----------------------------------------------------------------- form */
+
+  .field-label {
+    @apply mb-1.5 block text-sm font-semibold text-ink;
+  }
+  .field-input {
+    @apply w-full rounded-md border border-line bg-card
+           px-3 py-2.5 text-sm text-ink transition-shadow duration-150
+           placeholder:text-muted
+           focus:outline-none focus:border-accent
+           focus:ring-4 focus:ring-accent-soft;
+  }
+  .field-hint {
+    @apply mt-1.5 text-xs text-muted;
+  }
+
+  /* ------------------------------------------------------------- surfaces */
+
+  .surface-card {
+    @apply rounded-lg border border-line bg-card shadow-sm;
+  }
+
+  /* ------------------------------------------------------------ alert box */
+
+  /* .alert sets the shared shape - pair with a colour variant, e.g.
+     class="alert alert-warn" (same reason as .btn above). */
+  .alert {
+    @apply rounded-md border-l-2 px-3 py-2.5 text-sm;
+  }
+  .alert-info {
+    @apply border-accent bg-info-bg text-accent-dark;
+  }
+  .alert-warn {
+    @apply border-warn-line bg-warn-bg text-warn-ink;
+  }
+  .alert-error {
+    @apply border-error bg-error-bg text-error;
+  }
+
+  /* ------------------------------------------------------------ nav / app */
+
+  .nav-link {
+    @apply text-sm font-medium text-ink transition-colors hover:text-accent;
+  }
+
+  /* the mobile nav panel is toggled by site.js adding/removing this class -
+     id selectors are used so they reliably win over the `hidden`/`sm:flex`
+     utilities on the element */
+  @media (max-width: 639px) {
+    #nav-links.open {
+      display: flex;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0;
+      background: var(--color-card);
+      border-bottom: 1px solid var(--color-line);
+      box-shadow: var(--shadow-md, 0 4px 16px rgba(16, 24, 40, 0.08));
+      padding: 6px 0;
+      z-index: 20;
+    }
+    #nav-links.open > a,
+    #nav-links.open > form,
+    #nav-links.open .link-btn {
+      width: 100%;
+      padding: 12px 20px;
+      text-align: left;
+    }
+    #nav-links.open a.btn {
+      margin: 8px 20px;
+      width: calc(100% - 40px);
+      text-align: center;
+    }
+    #nav-links.open #theme-toggle {
+      margin: 4px 20px 8px;
+    }
+  }
+
+  /* --------------------------------------------------------------- table */
+
+  .data-table {
+    @apply w-full border-collapse text-sm;
+  }
+  .data-table th {
+    @apply whitespace-nowrap border-b border-line px-4 py-3 text-left
+           font-semibold text-muted;
+  }
+  .data-table td {
+    @apply whitespace-nowrap border-b border-line px-4 py-3 text-ink;
+  }
+  .data-table tbody tr {
+    @apply transition-colors hover:bg-card-alt;
+  }
+  .data-table tbody tr:last-child td {
+    @apply border-b-0;
+  }
+
+  /* -------------------------------------------------------- land-type pills */
+
+  .checkbox-option {
+    @apply flex cursor-pointer select-none items-center gap-1.5 rounded-full
+           border border-line bg-card px-3 py-1.5 text-sm
+           font-medium text-ink transition-colors
+           has-[:checked]:border-accent has-[:checked]:bg-info-bg
+           has-[:checked]:text-accent-dark;
+  }
+
+  /* -------------------------------------------------------------- flashes */
+
+  .flash {
+    @apply flex items-center gap-2.5 rounded-md px-3 py-2.5 text-sm;
+    animation: flash-in 0.2s ease;
+  }
+  .flash-error {
+    @apply bg-error-bg text-error;
+  }
+  .flash-info {
+    @apply bg-info-bg text-accent-dark;
+  }
+  .flash-close {
+    @apply flex-none cursor-pointer border-0 bg-transparent px-1 text-base leading-none
+           text-inherit opacity-60 hover:opacity-100;
+  }
+
+  /* ----------------------------------------------------------- skeleton -
+     created by app.js while a fetch is in flight (compare, amenities) */
+
+  .skeleton {
+    @apply block h-3 rounded;
+    margin: 6px 0;
+    background: linear-gradient(90deg, var(--color-line) 25%, var(--color-card-alt) 37%, var(--color-line) 63%);
+    background-size: 400% 100%;
+    animation: shimmer 1.4s ease infinite;
+  }
+  .skeleton + .skeleton { width: 80%; }
+  .skeleton:nth-child(3) { width: 60%; }
+
+  /* --------------------------------------------------------- compare rows -
+     rows below are built by renderCompare() in app.js - class names here
+     must match the ones it assigns exactly */
+
+  .compare-row {
+    @apply grid items-center gap-2 py-1 text-xs;
+    grid-template-columns: 92px 1fr 84px;
+  }
+  .compare-row-current .compare-label,
+  .compare-row-current .compare-value {
+    @apply font-bold text-accent;
+  }
+  .compare-bar-wrap {
+    @apply block h-2.5 overflow-hidden rounded bg-bg;
+  }
+  .compare-bar {
+    @apply block h-full rounded bg-accent transition-[width] duration-300;
+  }
+  .compare-value {
+    @apply text-right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ----------------------------------------------------------- amenities -
+     built by renderAmenities() / buildAmenityLegend() in app.js */
+
+  .amenity-group {
+    @apply mb-3;
+  }
+  .amenity-group h4 {
+    @apply mb-1 text-xs font-medium text-muted;
+  }
+  .amenity-group ul {
+    @apply m-0 list-none p-0;
+  }
+  .amenity-group li {
+    @apply flex cursor-pointer justify-between gap-2 rounded px-1 py-0.5 text-xs
+           transition-colors hover:bg-card-alt;
+  }
+  .amenity-group li .dist {
+    @apply whitespace-nowrap text-muted;
+    font-variant-numeric: tabular-nums;
+  }
+  .amenity-empty {
+    @apply text-xs text-muted;
+  }
+  .amenity-marker {
+    @apply flex items-center justify-center rounded-full border-2 text-sm leading-none;
+    width: 26px;
+    height: 26px;
+    background: var(--color-card);
+    border-color: var(--color-pro);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+  }
+  .amenity-legend {
+    @apply rounded-md border border-line bg-card px-2.5 py-2 text-xs shadow-md;
+  }
+  .amenity-legend-row {
+    @apply flex cursor-pointer items-center gap-1.5 whitespace-nowrap py-0.5;
+  }
+}
+
+/* ------------------------------------------------------------------ charts
+   Dashboard charts (static/charts.js). Colours are the validated reference
+   categorical palette (dataviz skill, palette.md) - slots 1-5 pass the CVD and
+   normal-vision gates in both modes; the light-mode slots under 3:1 contrast are
+   relieved by the legend values and the table view on every chart. */
+.viz-root {
+  --viz-surface: #fcfcfb;
+  --viz-ink: #0b0b0b;
+  --viz-ink-2: #52514e;
+  --viz-muted: #898781;
+  --viz-grid: #e1e0d9;
+  --viz-axis: #c3c2b7;
+  --viz-1: #2a78d6;
+  --viz-2: #eb6834;
+  --viz-3: #1baf7a;
+  --viz-4: #eda100;
+  --viz-5: #e87ba4;
+  /* ordinal blue ramp for the flood-record bars (High darkest) */
+  --viz-seq-1: #184f95;
+  --viz-seq-2: #2a78d6;
+  --viz-seq-3: #6da7ec;
+  --viz-seq-4: #9ec5f4;
+}
+:root[data-theme="dark"] .viz-root {
+  --viz-surface: #1a1a19;
+  --viz-ink: #ffffff;
+  --viz-ink-2: #c3c2b7;
+  --viz-muted: #898781;
+  --viz-grid: #2c2c2a;
+  --viz-axis: #383835;
+  --viz-1: #3987e5;
+  --viz-2: #d95926;
+  --viz-3: #199e70;
+  --viz-4: #c98500;
+  --viz-5: #d55181;
+  --viz-seq-1: #86b6ef;
+  --viz-seq-2: #3987e5;
+  --viz-seq-3: #256abf;
+  --viz-seq-4: #184f95;
+}
+
+@layer components {
+  .chart-card {
+    @apply rounded-lg border border-line shadow-sm p-5;
+    background: var(--viz-surface);
+  }
+  .chart-title {
+    @apply m-0 text-sm font-semibold;
+    color: var(--viz-ink);
+  }
+  .chart-sub {
+    @apply mt-0.5 mb-3 text-xs;
+    color: var(--viz-muted);
+  }
+  .chart-toggle {
+    @apply cursor-pointer rounded-sm border border-line px-2 py-0.5 text-xs font-medium;
+    color: var(--viz-ink-2);
+    background: transparent;
+  }
+  .chart-toggle:hover { background: var(--color-card-alt); }
+  .chart-tooltip {
+    @apply pointer-events-none absolute z-10 rounded-md border border-line px-2.5 py-1.5 text-xs shadow-md;
+    background: var(--color-card);
+    color: var(--viz-ink);
+    white-space: nowrap;
+  }
+  .chart-legend {
+    @apply m-0 mt-3 flex list-none flex-col gap-1.5 p-0 text-xs;
+    color: var(--viz-ink-2);
+  }
+  .chart-legend li { @apply flex items-center gap-2; }
+  .chart-legend .swatch { @apply inline-block h-2.5 w-2.5 flex-none rounded-sm; }
+  .chart-legend .val { @apply ml-auto tabular-nums; color: var(--viz-ink); }
+  .stat-tile {
+    @apply rounded-lg border border-line bg-card shadow-sm px-4 py-4;
+  }
+  .stat-tile .label { @apply block text-xs font-medium text-muted; }
+  .stat-tile .value { @apply mt-1 block text-2xl font-bold text-ink; }
+}
+
+/* landing page - full-bleed sections break out of main's 1080px column */
+.hero-bg {
+  background:
+    radial-gradient(900px 420px at 85% -10%, color-mix(in oklab, var(--color-accent) 16%, transparent), transparent 70%),
+    radial-gradient(700px 380px at -10% 110%, color-mix(in oklab, #1baf7a 14%, transparent), transparent 70%),
+    var(--color-bg);
+}
