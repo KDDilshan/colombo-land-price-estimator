@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — Colombo Land Price Estimator{% endblock %}
+
+{% block content %}
+<section>
+  <div class="mb-5 flex flex-wrap items-end justify-between gap-3">
+    <div>
+      <h1 class="m-0 text-2xl font-bold text-ink">Your estimates</h1>
+      <p class="m-0 mt-1 text-sm text-muted">A summary of every plot you have priced.</p>
+    </div>
+    {% if estimates %}
+    <a class="btn btn-primary" href="{{ url_for('main.app_tool') }}">New estimate</a>
+    {% endif %}
+  </div>
+
+  {% if not estimates %}
+  <div class="surface-card flex flex-col items-center gap-3 px-6 py-16 text-center">
+    <div class="flex h-11 w-11 items-center justify-center rounded-full bg-accent-soft text-accent">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 21V10l8-6 8 6v11M4 21h16M9 21v-6h6v6" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+    </div>
+    <p class="m-0 text-sm text-muted">No estimates yet. Your charts will appear here once you price a plot.</p>
+    <a class="btn btn-primary" href="{{ url_for('main.app_tool') }}">Run your first estimate</a>
+  </div>
+  {% else %}
+
+  <div class="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+    <div class="stat-tile">
+      <span class="label">Estimates</span>
+      <span class="value">{{ stats.count }}</span>
+    </div>
+    <div class="stat-tile">
+      <span class="label">Median price / perch</span>
+      <span class="value">LKR {{ '{:,.0f}'.format(stats.median_price) }}</span>
+    </div>
+    <div class="stat-tile">
+      <span class="label">Total value estimated</span>
+      <span class="value">LKR {{ '{:,.1f}'.format(stats.total_value / 1e6) }}M</span>
+    </div>
+    <div class="stat-tile">
+      <span class="label">GN divisions explored</span>
+      <span class="value">{{ stats.division_count }}</span>
+    </div>
+  </div>
+
+  <div class="viz-root mb-4 grid grid-cols-1 gap-3 lg:grid-cols-2">
+    <div class="chart-card relative">
+      <div class="flex items-start justify-between gap-2">
+        <div>
+          <h2 class="chart-title">Average price per perch, by GN division</h2>
+          <p class="chart-sub">Your most-priced divisions, highest first</p>
+        </div>
+        <button class="chart-toggle" type="button" aria-pressed="false">Table</button>
+      </div>
+      <div data-chart="division"></div>
+    </div>
+
+    <div class="chart-card relative">
+      <div class="flex items-start justify-between gap-2">
+        <div>
+          <h2 class="chart-title">Estimates by land type</h2>
+          <p class="chart-sub">Share of all your estimates</p>
+        </div>
+        <button class="chart-toggle" type="button" aria-pressed="false">Table</button>
+      </div>
+      <div data-chart="landtype"></div>
+    </div>
+
+    <div class="chart-card relative">
+      <div class="flex items-start justify-between gap-2">
+        <div>
+          <h2 class="chart-title">Estimates per month</h2>
+          <p class="chart-sub">Last six months</p>
+        </div>
+        <button class="chart-toggle" type="button" aria-pressed="false">Table</button>
+      </div>
+      <div data-chart="activity"></div>
+    </div>
+
+    <div class="chart-card relative">
+      <div class="flex items-start justify-between gap-2">
+        <div>
+          <h2 class="chart-title">Past flooding record of your plots</h2>
+          <p class="chart-sub">From Survey Department maps and DMC records &mdash; descriptive, not a prediction</p>
+        </div>
+        <button class="chart-toggle" type="button" aria-pressed="false">Table</button>
+      </div>
+      <div data-chart="flood"></div>
+    </div>
+  </div>
+
+  <h2 class="mb-2.5 mt-6 text-base font-semibold text-ink">History</h2>
+  <div class="surface-card overflow-x-auto">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Division</th>
+          <th>Perches</th>
+          <th>Land type</th>
+          <th>Price / perch</th>
+          <th>Total</th>
+          <th>Confidence</th>
+          {% if current_user.is_pro %}<th>PDF</th>{% endif %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for e in estimates %}
+        <tr>
+          <td>{{ e.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+          <td>{{ (e.division or '—').title() }}{% if not e.known_division %} <span class="badge-off">unknown</span>{% endif %}</td>
+          <td>{{ '%.1f'|format(e.perches) }}</td>
+          <td>{{ e.land_type_label or e.land_type or '—' }}</td>
+          <td>LKR {{ '{:,.0f}'.format(e.price_per_perch) }}</td>
+          <td>LKR {{ '{:,.0f}'.format(e.total_price) }}</td>
+          <td>{{ e.confidence or '—' }}</td>
+          {% if current_user.is_pro %}
+          <td><a class="font-medium text-accent hover:text-accent-dark" href="{{ url_for('dashboard.estimate_pdf', estimate_id=e.id) }}">Download</a></td>
+          {% endif %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+</section>
+{% endblock %}
+
+{% block scripts %}
+{% if stats %}
+<script>window.DASH_STATS = {{ stats|tojson }};</script>
+<script src="{{ url_for('static', filename='charts.js') }}"></script>
+{% endif %}
+{% endblock %}

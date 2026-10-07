@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}Account — Colombo Land Price Estimator{% endblock %}
+
+{% block content %}
+<section class="mx-auto max-w-2xl">
+  <h1 class="mb-5 text-2xl font-bold text-ink">Account</h1>
+
+  <div class="surface-card mb-5 flex flex-wrap items-center gap-4 p-5">
+    <div class="flex h-12 w-12 flex-none items-center justify-center rounded-full bg-accent-soft text-lg font-bold text-accent">
+      {{ (current_user.name or current_user.email)[0] | upper }}
+    </div>
+    <div class="min-w-0 flex-1">
+      <p class="m-0 truncate text-sm font-semibold text-ink">{{ current_user.name or current_user.email }}</p>
+      <p class="m-0 truncate text-sm text-muted">{{ current_user.email }}</p>
+    </div>
+    <span class="badge-plan {{ 'badge-plan-pro' if current_user.is_pro else 'badge-plan-free' }}">
+      {{ 'Pro' if current_user.is_pro else 'Free' }} plan
+    </span>
+  </div>
+
+  <div class="mb-5 grid grid-cols-2 gap-4">
+    <div class="surface-card p-4 text-center">
+      <span class="block text-2xl font-extrabold tabular-nums text-ink">{{ current_user.estimates.count() }}</span>
+      <span class="mt-1 block text-xs text-muted">Total estimates</span>
+    </div>
+    <div class="surface-card p-4 text-center">
+      <span class="block text-2xl font-extrabold tabular-nums text-ink">{{ current_user.estimates_this_period() }}</span>
+      <span class="mt-1 block text-xs text-muted">In the last 30 days</span>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+    <div class="surface-card p-5">
+      <h2 class="mb-3 text-[13px] font-semibold uppercase tracking-wide text-muted">Plan &amp; billing</h2>
+      <dl class="mb-4 flex flex-col gap-2 text-sm">
+        <div class="flex justify-between gap-3">
+          <dt class="text-muted">Plan</dt>
+          <dd class="m-0 font-medium text-ink">{{ 'Pro' if current_user.is_pro else 'Free' }}</dd>
+        </div>
+        {% if current_user.subscription_status %}
+        <div class="flex justify-between gap-3">
+          <dt class="text-muted">Status</dt>
+          <dd class="m-0 font-medium text-ink">{{ current_user.subscription_status }}</dd>
+        </div>
+        {% endif %}
+        {% if current_user.current_period_end %}
+        <div class="flex justify-between gap-3">
+          <dt class="text-muted">Renews / ends</dt>
+          <dd class="m-0 font-medium text-ink">{{ current_user.current_period_end.strftime('%Y-%m-%d') }}</dd>
+        </div>
+        {% endif %}
+      </dl>
+      {% if current_user.is_pro %}
+      <form method="post" action="{{ url_for('billing.portal') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-secondary w-full" type="submit">Manage billing</button>
+      </form>
+      {% else %}
+      <a class="btn btn-primary w-full" href="{{ url_for('billing.pricing') }}">Upgrade to Pro</a>
+      {% endif %}
+    </div>
+
+    <div class="surface-card p-5">
+      <h2 class="mb-3 text-[13px] font-semibold uppercase tracking-wide text-muted">Security</h2>
+      <dl class="mb-4 flex flex-col gap-2 text-sm">
+        <div class="flex justify-between gap-3">
+          <dt class="text-muted">Sign-in method</dt>
+          <dd class="m-0 font-medium text-ink">{{ 'Google' if current_user.google_id else 'Email & password' }}</dd>
+        </div>
+        <div class="flex justify-between gap-3">
+          <dt class="text-muted">Password</dt>
+          <dd class="m-0 font-medium text-ink">{{ 'Set' if current_user.password_hash else 'Not set' }}</dd>
+        </div>
+        <div class="flex justify-between gap-3">
+          <dt class="text-muted">Member since</dt>
+          <dd class="m-0 font-medium text-ink">{{ current_user.created_at.strftime('%Y-%m-%d') }}</dd>
+        </div>
+      </dl>
+      <a class="btn btn-secondary w-full" href="{{ url_for('auth.change_password_form') }}">
+        {{ 'Change password' if current_user.password_hash else 'Set a password' }}
+      </a>
+    </div>
+  </div>
+</section>
+{% endblock %}
