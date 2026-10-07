@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Pricing — Colombo Land Price Estimator{% endblock %}
+
+{% block content %}
+<section class="text-center">
+  <h1 class="mb-8 text-3xl font-bold text-ink">Pricing</h1>
+
+  <div class="mx-auto mb-6 flex max-w-2xl flex-wrap justify-center gap-5">
+    <div class="surface-card w-full max-w-70 p-6 text-left">
+      <h2 class="mb-1 text-lg font-bold text-ink">Free</h2>
+      <p class="mb-5 text-3xl font-bold text-ink">LKR 0<span class="text-sm font-normal text-muted">/mo</span></p>
+      <ul class="m-0 mb-6 list-none p-0">
+        <li class="border-b border-line py-2 text-sm text-ink">{{ free_limit }} estimates every 30 days</li>
+        <li class="border-b border-line py-2 text-sm text-ink">Map click / draw / division lookup</li>
+        <li class="border-b border-line py-2 text-sm text-ink">Past flooding record for every plot</li>
+        <li class="border-b border-line py-2 text-sm text-muted line-through">Nearby amenities</li>
+        <li class="py-2 text-sm text-muted line-through">Saved history & PDF export</li>
+      </ul>
+      {% if current_user.is_authenticated %}
+        <span class="btn btn-secondary btn-disabled w-full">Your current plan</span>
+      {% else %}
+        <a class="btn btn-secondary w-full" href="{{ url_for('auth.signup_form') }}">Sign up free</a>
+      {% endif %}
+    </div>
+
+    <div class="surface-card relative w-full max-w-70 border-pro p-6 text-left ring-1 ring-pro">
+      <span class="absolute -top-2.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-pro px-3 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white">Most popular</span>
+      <h2 class="mb-1 text-lg font-bold text-ink">Pro</h2>
+      <p class="mb-5 text-3xl font-bold text-ink">LKR 3,000<span class="text-sm font-normal text-muted">/mo</span></p>
+      <ul class="m-0 mb-6 list-none p-0">
+        <li class="border-b border-line py-2 text-sm text-ink">Unlimited estimates</li>
+        <li class="border-b border-line py-2 text-sm text-ink">Nearby amenities (schools, hospitals, transport &amp; more)</li>
+        <li class="border-b border-line py-2 text-sm text-ink">Full saved estimate history</li>
+        <li class="border-b border-line py-2 text-sm text-ink">Branded PDF reports</li>
+        <li class="py-2 text-sm text-ink">Priority accuracy notes</li>
+      </ul>
+      {% if current_user.is_authenticated %}
+        {% if current_user.is_pro %}
+          <span class="btn btn-primary btn-disabled w-full">Your current plan</span>
+        {% elif stripe_configured %}
+          <form method="post" action="{{ url_for('billing.checkout') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-primary w-full" type="submit">Upgrade to Pro</button>
+          </form>
+        {% else %}
+          <span class="btn btn-primary btn-disabled w-full">Billing not configured yet</span>
+        {% endif %}
+      {% else %}
+        <a class="btn btn-primary w-full" href="{{ url_for('auth.signup_form') }}">Sign up, then upgrade</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <p class="text-sm text-muted">Prices shown in LKR for illustration — adjust the Stripe price to whatever you set up.</p>
+</section>
+{% endblock %}

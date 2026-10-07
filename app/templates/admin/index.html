@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Admin — Colombo Land Price Estimator{% endblock %}
+
+{% block content %}
+<section>
+  <h1 class="mb-5 text-2xl font-bold text-ink">Users</h1>
+  <div class="surface-card overflow-x-auto">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Email</th>
+          <th>Name</th>
+          <th>Plan</th>
+          <th>Status</th>
+          <th>Estimates</th>
+          <th>Joined</th>
+          <th>Override</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+        <tr>
+          <td>{{ u.email }}</td>
+          <td>{{ u.name or '—' }}</td>
+          <td>{{ 'Pro' if u.is_pro else u.plan }}</td>
+          <td>{{ u.subscription_status or '—' }}</td>
+          <td>{{ counts.get(u.id, 0) }}</td>
+          <td>{{ u.created_at.strftime('%Y-%m-%d') }}</td>
+          <td>
+            <form method="post" action="{{ url_for('admin.toggle_pro', user_id=u.id) }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="link-btn" type="submit">
+                {{ 'Revoke Pro' if u.plan == 'pro' else 'Grant Pro' }}
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

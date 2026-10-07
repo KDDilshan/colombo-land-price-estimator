@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Page not found — Colombo Land Price Estimator{% endblock %}
+
+{% block content %}
+<section class="mx-auto max-w-sm py-16 text-center">
+  <h1 class="m-0 text-6xl font-extrabold text-accent">404</h1>
+  <p class="mb-5 mt-2 text-muted">That page doesn't exist.</p>
+  <a class="btn btn-primary" href="{{ url_for('main.landing') }}">Back home</a>
+</section>
+{% endblock %}

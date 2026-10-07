@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+{% block title %}Estimate — Colombo Land Price Estimator{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css">
+{% endblock %}
+
+{% block content %}
+<div id="app-shell" class="flex h-screen flex-col md:flex-row">
+
+<div id="map" class="h-[55vh] min-w-0 flex-none md:h-auto md:flex-1"></div>
+
+<aside id="panel" class="flex-none overflow-y-auto border-t border-line bg-bg p-4 md:w-95 md:border-l md:border-t-0">
+
+  <section class="surface-card mb-3.5 p-4">
+    <h2 class="mb-2.5 text-[13px] font-semibold uppercase tracking-wide text-muted">Plot</h2>
+
+    <div class="mb-3.5">
+      <label class="field-label" for="district">District</label>
+      <select class="field-input" id="district">
+        <option value="colombo">Colombo</option>
+        <option value="ratnapura">Ratnapura</option>
+      </select>
+    </div>
+
+    <div id="colombo-fields">
+      <p class="alert alert-info mb-3.5" id="location-hint">
+        Click a point on the map, or use the polygon tool to draw the plot.
+      </p>
+
+      <div class="mb-3.5" id="division-field">
+        <label class="field-label" for="division-search">GN division</label>
+        <input class="field-input" type="search" id="division-search" list="division-options"
+               placeholder="Type to search, or click the map" autocomplete="off">
+        <datalist id="division-options">
+          {% for d in divisions %}
+          <option value="{{ d }}"></option>
+          {% endfor %}
+        </datalist>
+        {# the real value the estimator reads; kept in sync with the search box #}
+        <select class="field-input" id="division" hidden aria-hidden="true" tabindex="-1">
+          <option value="">— click the map to set —</option>
+          {% for d in divisions %}
+          <option value="{{ d }}">{{ d }}</option>
+          {% endfor %}
+        </select>
+        <p class="field-hint" id="division-sub"></p>
+      </div>
+
+      <div class="mb-3.5" id="ratnapura-field" hidden>
+        <label class="field-label" for="ratnapura-point">Reference point</label>
+        <select class="field-input" id="ratnapura-point">
+          <option value="">— click the map to set —</option>
+          {% for p in ratnapura_points %}
+          <option value="{{ loop.index0 }}">{{ p.label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="mb-3.5">
+        <label class="field-label" for="perches">Land size (perches)</label>
+        <input class="field-input" type="number" id="perches" min="0.1" step="0.1" value="10">
+        <p class="field-hint" id="perches-sub">1 perch = {{ perch_m2 }} m&sup2;</p>
+      </div>
+
+      <div class="mb-3.5">
+        <label class="field-label">Land type</label>
+        <div class="flex flex-wrap gap-2" id="land-type-group">
+          <label class="checkbox-option">
+            <input class="m-0 w-auto" type="checkbox" value="Agricultural"> Agricultural
+          </label>
+          <label class="checkbox-option">
+            <input class="m-0 w-auto" type="checkbox" value="Commercial"> Commercial
+          </label>
+          <label class="checkbox-option">
+            <input class="m-0 w-auto" type="checkbox" value="Residential" checked> Residential
+          </label>
+          <label class="checkbox-option">
+            <input class="m-0 w-auto" type="checkbox" value="Other"> Other
+          </label>
+        </div>
+        <p class="field-hint" id="land-type-sub">Pick one or more &mdash; mixed use (e.g. Commercial + Residential) is priced as its own category where the model has seen it.</p>
+      </div>
+
+      <button class="btn btn-primary w-full" id="submit">Estimate price</button>
+      <button class="btn btn-secondary mt-1.5 w-full" id="reset">Clear map</button>
+
+      <p class="alert alert-error mt-2.5" id="error" hidden></p>
+      <p class="alert alert-warn mt-2.5" id="quota-note" hidden></p>
+    </div>
+  </section>
+
+  <section class="surface-card mb-3.5 p-4" id="results" hidden>
+    <h2 class="mb-2.5 text-[13px] font-semibold uppercase tracking-wide text-muted">Estimate</h2>
+
+    <div class="flex items-baseline justify-between gap-2.5 border-b border-line py-1.5">
+      <span class="text-[13px] text-muted">Price per perch</span>
+      <span class="text-lg font-semibold tabular-nums text-ink" id="per-perch"></span>
+    </div>
+    <div class="flex items-baseline justify-between gap-2.5 border-b border-line py-1.5">
+      <span class="text-[13px] text-muted">Total for the plot</span>
+      <span class="text-lg font-semibold tabular-nums text-ink" id="total"></span>
+    </div>
+    <p class="field-hint" id="basis"></p>
+    <p class="field-hint" id="listing-basis"></p>
+
+    <div class="alert alert-warn mt-3" id="low-confidence-warning" hidden>
+      <span id="low-confidence-detail"></span>
+    </div>
+
+    <div class="alert alert-warn mt-3" id="small-plot-warning" hidden>
+      <strong>Small plot.</strong>
+      Only {{ small_plot_listings }} of the training listings are under
+      {{ small_plot_perches }} perches, so the model has very little data for plots
+      this small. Treat this estimate with caution &mdash; it is most reliable for
+      plots of {{ small_plot_perches }} perches or more.
+    </div>
+
+    <div class="alert alert-warn mt-3" id="unknown-warning" hidden>
+      <strong>Outside the modelled divisions.</strong>
+      <span id="unknown-detail"></span>
+      This estimate uses Colombo-wide average values instead of this
+      division's own, so it is substantially less reliable than an estimate
+      for one of the {{ division_count }} modelled divisions.
+    </div>
+
+    <div id="flood-record-wrap" hidden>
+      <h3 class="mb-1 mt-4.5 flex items-center gap-2 text-sm font-semibold text-ink">
+        Past flooding &mdash; official records
+        <span class="rounded px-1.5 py-0.5 text-xs font-semibold" id="fr-badge"></span>
+      </h3>
+      <p class="field-hint" id="fr-gn"></p>
+      <table class="mt-1.5 w-full border-collapse text-[13px]">
+        <tr><th class="border-b border-line py-1.5 text-left font-medium text-muted">Survey Dept. flood map, May 2016</th><td class="border-b border-line py-1.5 text-right tabular-nums" id="fr-2016"></td></tr>
+        <tr><th class="border-b border-line py-1.5 text-left font-medium text-muted">Survey Dept. flood map, May 2018</th><td class="border-b border-line py-1.5 text-right tabular-nums" id="fr-2018"></td></tr>
+        <tr><th class="border-b border-line py-1.5 text-left font-medium text-muted">Survey Dept. flood map, Cyclone Ditwah Nov 2025</th><td class="border-b border-line py-1.5 text-right tabular-nums" id="fr-2025"></td></tr>
+        <tr><th class="border-b border-line py-1.5 text-left font-medium text-muted">DMC disaster records naming this GN (1974&ndash;2019)</th><td class="border-b border-line py-1.5 text-right tabular-nums" id="fr-dmc"></td></tr>
+        <tr><th class="border-b border-line py-1.5 text-left font-medium text-muted">DMC flood records, whole DS division</th><td class="border-b border-line py-1.5 text-right tabular-nums" id="fr-ds"></td></tr>
+      </table>
+      <p class="mt-2.5 text-xs leading-relaxed text-muted">
+        Descriptive only: what official records say happened before in this GN
+        division. It is not a prediction and is not used in the price. A GN with
+        no record may still flood &mdash; the Survey Department maps cover the
+        Kelani floodplain, not local drainage flooding.
+      </p>
+    </div>
+
+    <h3 class="mb-1 mt-4.5 text-sm font-semibold text-ink" id="flood-heading">Environmental and spatial profile</h3>
+    <p class="field-hint">Values the price model uses for this division &mdash; read-only.</p>
+    <table class="mt-1.5 w-full border-collapse text-[13px]">
+      <tr><th class="border-b border-line py-1.5 text-left font-medium text-muted">Surface water occurrence</th><td class="border-b border-line py-1.5 text-right tabular-nums" id="f-water"></td></tr>
+      <tr><th class="border-b border-line py-1.5 text-left font-medium text-muted">Height above nearest drainage</th><td class="border-b border-line py-1.5 text-right tabular-nums" id="f-hand"></td></tr>
+      <tr><th class="border-b border-line py-1.5 text-left font-medium text-muted">Distance to nearest stream</th><td class="border-b border-line py-1.5 text-right tabular-nums" id="f-stream"></td></tr>
+      <tr><th class="border-b border-line py-1.5 text-left font-medium text-muted">Vegetation (NDVI, 2023&ndash;2025)</th><td class="border-b border-line py-1.5 text-right tabular-nums" id="f-ndvi"></td></tr>
+    </table>
+    <p class="mt-2.5 text-xs leading-relaxed text-muted">
+      These describe the division around the plot. The model uses them as
+      associations with asking prices; they are not a flood forecast and do
+      not show that any one of them causes a price difference.
+    </p>
+
+    <div id="pdf-link-wrap" class="mt-3" hidden>
+      <a class="btn btn-secondary w-full" id="pdf-link" href="#">Download PDF report</a>
+    </div>
+
+    <p class="mt-2.5 border-t border-line pt-2.5 text-xs leading-relaxed text-muted">
+      Typical error {{ accuracy.median_ape }}% (median),
+      {{ accuracy.mean_ape }}% (mean). Estimate only, not a valuation.
+    </p>
+  </section>
+
+  <section class="surface-card mb-3.5 p-4" id="compare-card" hidden>
+    <h2 class="mb-2.5 text-[13px] font-semibold uppercase tracking-wide text-muted">Compare land types</h2>
+    <button class="btn btn-secondary w-full" id="compare-btn">Compare all land types for this plot</button>
+    <div id="compare-results" class="mt-2.5"></div>
+    <div id="compare-teaser" hidden>
+      <p class="field-hint">See how price changes across every land type for this exact plot.</p>
+      <a class="btn btn-primary w-full" href="{{ url_for('billing.pricing') }}">Upgrade to Pro to unlock</a>
+    </div>
+  </section>
+
+  <section class="surface-card mb-3.5 p-4" id="amenities-card" hidden>
+    <h2 class="mb-2.5 text-[13px] font-semibold uppercase tracking-wide text-muted">Nearby amenities</h2>
+    <div id="amenities-pro">
+      <p class="field-hint">Within 1.5 km of the plot, from OpenStreetMap.</p>
+      <div id="amenities-list"></div>
+    </div>
+    <div id="amenities-teaser" class="py-3.5 text-center" hidden>
+      <p class="field-hint">Schools, hospitals, supermarkets, banks and transport near this plot.</p>
+      <a class="btn btn-primary mt-2.5 w-full" href="{{ url_for('billing.pricing') }}">Upgrade to Pro to unlock</a>
+    </div>
+  </section>
+
+</aside>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+<script>
+  window.PERCH_M2 = {{ perch_m2 }};
+  window.DIVISION_COUNT = {{ division_count }};
+  window.LAND_TYPE_VALUES = {{ land_types | map(attribute='value') | list | tojson }};
+  window.RATNAPURA_POINTS = {{ ratnapura_points | tojson }};
+</script>
+<script src="{{ url_for('static', filename='app.js') }}"></script>
+{% endblock %}

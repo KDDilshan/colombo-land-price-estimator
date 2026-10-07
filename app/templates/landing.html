@@ -1,0 +1,311 @@
+{% extends "base.html" %}
+{% block title %}Colombo Land Price Estimator{% endblock %}
+
+{% block content %}
+<div id="landing">
+
+{# ------------------------------------------------------------------ hero #}
+<section class="hero-bg border-b border-line">
+  <div class="mx-auto grid max-w-[1120px] items-center gap-10 px-5 py-14 md:grid-cols-[1.05fr_1fr] md:py-20">
+    <div>
+      <span class="mb-5 inline-flex items-center gap-2 rounded-full border border-line bg-card px-3 py-1 text-xs font-medium text-muted">
+        <span class="inline-block h-1.5 w-1.5 rounded-full bg-accent"></span>
+        Colombo District &middot; {{ division_count }} GN divisions
+      </span>
+      <h1 class="mb-4 text-4xl font-extrabold leading-[1.08] tracking-tight text-ink sm:text-5xl">
+        Know what a plot in Colombo is worth <span class="text-accent">before you buy or sell.</span>
+      </h1>
+      <p class="mb-7 max-w-xl text-base text-muted sm:text-lg">
+        Click any point on the map and get a price per perch in seconds &mdash; from a
+        tuned XGBoost model trained on real land listings, with satellite-derived
+        environmental data and each GN division's official past-flooding record.
+      </p>
+      <div class="flex flex-wrap gap-3">
+        <a class="btn btn-primary px-5 py-2.5" href="{{ url_for('auth.signup_form') }}">Get started free</a>
+        <a class="btn btn-secondary px-5 py-2.5" href="{{ url_for('main.model_notes') }}">How it works</a>
+      </div>
+      <div class="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-xs text-muted">
+        <span class="inline-flex items-center gap-1.5">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          6,167 real listings
+        </span>
+        <span class="inline-flex items-center gap-1.5">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Landsat &amp; Sentinel-1 data
+        </span>
+        <span class="inline-flex items-center gap-1.5">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Survey Dept. &amp; DMC flood records
+        </span>
+      </div>
+    </div>
+
+    {# aerial land illustration - original SVG, no external images #}
+    <div class="relative">
+      <div class="overflow-hidden rounded-[22px] border border-line shadow-xl">
+        <svg viewBox="0 0 560 440" class="block h-auto w-full" role="img" aria-label="Illustration of land plots beside a river, with one plot priced">
+          <defs>
+            <linearGradient id="h-land" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#cfe8b8"/><stop offset="1" stop-color="#9fcf87"/>
+            </linearGradient>
+            <linearGradient id="h-river" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0" stop-color="#5aa9e6"/><stop offset="1" stop-color="#3f8fd4"/>
+            </linearGradient>
+            <pattern id="h-paddy" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(-18)">
+              <rect width="10" height="10" fill="#b9dc8f"/><line x1="0" y1="5" x2="10" y2="5" stroke="#9cc972" stroke-width="3"/>
+            </pattern>
+            <pattern id="h-flood" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+              <rect width="8" height="8" fill="#7cc0f0" fill-opacity=".22"/><line x1="0" y1="0" x2="0" y2="8" stroke="#3f8fd4" stroke-opacity=".35" stroke-width="2"/>
+            </pattern>
+            <filter id="h-shadow" x="-20%" y="-20%" width="140%" height="160%">
+              <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#0b1b33" flood-opacity=".22"/>
+            </filter>
+          </defs>
+
+          <rect width="560" height="440" fill="url(#h-land)"/>
+
+          {# parcels #}
+          <g stroke="#ffffff" stroke-opacity=".75" stroke-width="2" stroke-dasharray="6 5">
+            <path d="M0 0H190L170 120H0Z" fill="#c3e3a8"/>
+            <path d="M190 0H360L340 105L170 120Z" fill="url(#h-paddy)"/>
+            <path d="M360 0H560V95L340 105Z" fill="#b5dc98"/>
+            <path d="M0 120H170L150 230H0Z" fill="#aad48f"/>
+            <path d="M340 105H560V210L330 220Z" fill="#c9e7ad"/>
+            <path d="M0 330H130L120 440H0Z" fill="url(#h-paddy)"/>
+            <path d="M300 330H560V440H290Z" fill="#b1d994"/>
+          </g>
+
+          {# official flood extent along the river #}
+          <path d="M-10 300 C90 270 150 250 230 262 C320 276 380 250 470 226 C520 213 560 212 580 214 V300 C520 300 470 312 400 326 C320 342 250 332 180 330 C110 328 50 344 -10 356Z"
+                fill="url(#h-flood)" stroke="#3f8fd4" stroke-opacity=".55" stroke-width="1.5" stroke-dasharray="4 4"/>
+
+          {# river #}
+          <path d="M-10 318 C80 292 150 282 230 294 C320 308 390 280 470 258 C520 244 560 244 580 246" fill="none" stroke="url(#h-river)" stroke-width="26" stroke-linecap="round"/>
+          <path d="M-10 318 C80 292 150 282 230 294 C320 308 390 280 470 258 C520 244 560 244 580 246" fill="none" stroke="#bfe3fb" stroke-width="3" stroke-opacity=".7" stroke-dasharray="18 22"/>
+
+          {# roads #}
+          <path d="M250 -10 C240 80 230 160 250 250" fill="none" stroke="#f6efe0" stroke-width="12" stroke-linecap="round"/>
+          <path d="M-10 190 C120 175 260 170 580 150" fill="none" stroke="#f6efe0" stroke-width="10" stroke-linecap="round"/>
+          <path d="M250 -10 C240 80 230 160 250 250" fill="none" stroke="#d9cfb8" stroke-width="1.5" stroke-dasharray="7 7"/>
+
+          {# houses #}
+          <g>
+            <g transform="translate(40 40)"><rect width="30" height="22" rx="2" fill="#fbfaf6"/><path d="M-3 2 15 -12 33 2Z" fill="#d9644a"/></g>
+            <g transform="translate(92 70)"><rect width="26" height="20" rx="2" fill="#fbfaf6"/><path d="M-3 2 13 -10 29 2Z" fill="#c9553d"/></g>
+            <g transform="translate(400 30)"><rect width="34" height="24" rx="2" fill="#fbfaf6"/><path d="M-3 2 17 -13 37 2Z" fill="#d9644a"/></g>
+            <g transform="translate(460 60)"><rect width="26" height="20" rx="2" fill="#fbfaf6"/><path d="M-3 2 13 -10 29 2Z" fill="#c9553d"/></g>
+            <g transform="translate(30 150)"><rect width="28" height="20" rx="2" fill="#fbfaf6"/><path d="M-3 2 14 -11 31 2Z" fill="#d9644a"/></g>
+            <g transform="translate(420 372)"><rect width="30" height="22" rx="2" fill="#fbfaf6"/><path d="M-3 2 15 -12 33 2Z" fill="#c9553d"/></g>
+          </g>
+
+          {# trees and palms #}
+          <g fill="#5f9d4a">
+            <circle cx="140" cy="40" r="11"/><circle cx="155" cy="52" r="9"/><circle cx="520" cy="130" r="12"/>
+            <circle cx="95" cy="200" r="10"/><circle cx="500" cy="400" r="12"/><circle cx="360" cy="400" r="9"/>
+            <circle cx="60" cy="390" r="10"/>
+          </g>
+          <g stroke="#4d8a3b" stroke-width="3" stroke-linecap="round">
+            <path d="M320 60v-18M320 42l-10 -6M320 42l10 -6M320 42l-12 3M320 42l12 3"/>
+            <path d="M205 395v-18M205 377l-10 -6M205 377l10 -6M205 377l-12 3M205 377l12 3"/>
+          </g>
+
+          {# the priced plot #}
+          <path d="M340 105L330 220L420 214L430 100Z" fill="#2563eb" fill-opacity=".20" stroke="#1d4ed8" stroke-width="3"/>
+          <g transform="translate(380 150)">
+            <path d="M0 18C-10 6 -14 -1 -14 -8A14 14 0 0 1 14 -8C14 -1 10 6 0 18Z" fill="#1d4ed8"/>
+            <circle cy="-8" r="5" fill="#fff"/>
+          </g>
+
+          {# price card - a real estimate from the deployed model (Battaramulla, 10
+             perches, residential) and its real flood record; update if retrained #}
+          <g transform="translate(200 342)" filter="url(#h-shadow)">
+            <rect width="220" height="78" rx="14" fill="#ffffff"/>
+            <text x="16" y="24" font-family="Inter, system-ui, sans-serif" font-size="11" fill="#71717a">Battaramulla &middot; 10 perches</text>
+            <text x="16" y="50" font-family="Inter, system-ui, sans-serif" font-size="21" font-weight="800" fill="#18181b">LKR 2.75M</text>
+            <text x="126" y="50" font-family="Inter, system-ui, sans-serif" font-size="11" fill="#71717a">/ perch</text>
+            <rect x="16" y="58" width="112" height="14" rx="7" fill="#dcfce7"/>
+            <text x="24" y="68.5" font-family="Inter, system-ui, sans-serif" font-size="9" font-weight="600" fill="#166534">Past flooding: Low</text>
+          </g>
+
+          <g transform="translate(18 262)">
+            <rect width="132" height="22" rx="11" fill="#ffffff" fill-opacity=".9"/>
+            <rect x="10" y="7" width="10" height="8" rx="2" fill="url(#h-flood)" stroke="#3f8fd4" stroke-width="1"/>
+            <text x="26" y="15" font-family="Inter, system-ui, sans-serif" font-size="9.5" fill="#1f3b5c">Official flood record</text>
+          </g>
+        </svg>
+      </div>
+    </div>
+  </div>
+</section>
+
+{# ----------------------------------------------------------------- stats #}
+<section class="mx-auto -mt-8 grid max-w-[1000px] grid-cols-2 gap-3 px-5 sm:grid-cols-4">
+  <div class="surface-card px-3 py-5 text-center">
+    <span class="block text-2xl font-extrabold text-accent tabular-nums sm:text-[28px]">{{ accuracy.median_ape }}%</span>
+    <span class="mt-1 block text-xs text-muted">median error</span>
+  </div>
+  <div class="surface-card px-3 py-5 text-center">
+    <span class="block text-2xl font-extrabold text-accent tabular-nums sm:text-[28px]">{{ accuracy.r2_known }}%</span>
+    <span class="mt-1 block text-xs text-muted">R&sup2; on trained divisions</span>
+  </div>
+  <div class="surface-card px-3 py-5 text-center">
+    <span class="block text-2xl font-extrabold text-accent tabular-nums sm:text-[28px]">6,167</span>
+    <span class="mt-1 block text-xs text-muted">land listings modelled</span>
+  </div>
+  <div class="surface-card px-3 py-5 text-center">
+    <span class="block text-2xl font-extrabold text-accent tabular-nums sm:text-[28px]">{{ division_count }}</span>
+    <span class="mt-1 block text-xs text-muted">GN divisions modelled</span>
+  </div>
+</section>
+<p class="mb-16 mt-4 text-center text-sm text-muted">
+  Curious how this was tested, including what didn't make the cut?
+  <a class="font-medium text-accent hover:text-accent-dark" href="{{ url_for('main.model_notes') }}">Read the model notes &rarr;</a>
+</p>
+
+{# ---------------------------------------------------------- how it works #}
+<section class="mx-auto mb-16 max-w-[1000px] px-5">
+  <h2 class="mb-2 text-center text-2xl font-bold text-ink sm:text-3xl">Three steps to a price</h2>
+  <p class="mx-auto mb-8 max-w-xl text-center text-sm text-muted">No forms to fill in about the neighbourhood &mdash; the map already knows it.</p>
+  <div class="grid gap-4 sm:grid-cols-3">
+    {% for n, title, text in [
+      ('1', 'Pick the plot', 'Click a point on the map or draw the plot outline. The GN division and the area in perches are worked out for you.'),
+      ('2', 'Choose the land type', 'Residential, commercial, agricultural or a mix &mdash; each is priced as the market lists it.'),
+      ('3', 'Get the estimate', 'A price per perch and a total, with how many listings back it and the GN division&rsquo;s past-flooding record.'),
+    ] %}
+    <div class="surface-card p-5">
+      <span class="mb-3 flex h-8 w-8 items-center justify-center rounded-full bg-accent text-sm font-bold text-white">{{ n }}</span>
+      <h3 class="mb-1.5 text-base font-semibold text-ink">{{ title }}</h3>
+      <p class="m-0 text-sm text-muted">{{ text|safe }}</p>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+{# ------------------------------------------------------------ land types #}
+<section class="border-y border-line bg-card-alt py-16">
+  <div class="mx-auto max-w-[1000px] px-5">
+    <h2 class="mb-2 text-center text-2xl font-bold text-ink sm:text-3xl">Every kind of land in Colombo</h2>
+    <p class="mx-auto mb-8 max-w-xl text-center text-sm text-muted">From city-edge house plots to paddy land along the Kelani.</p>
+    <div class="grid gap-4 sm:grid-cols-3">
+
+      <div class="surface-card overflow-hidden">
+        <svg viewBox="0 0 320 170" class="block h-auto w-full" role="img" aria-label="Residential plots with houses and gardens">
+          <rect width="320" height="170" fill="#dbeefc"/>
+          <path d="M0 118C60 104 120 112 170 108C230 103 280 96 320 100V170H0Z" fill="#a8d58b"/>
+          <circle cx="262" cy="38" r="16" fill="#fcd34d"/>
+          <g transform="translate(46 72)"><rect width="58" height="44" rx="3" fill="#fbfaf6"/><path d="M-6 3 29 -24 64 3Z" fill="#d9644a"/><rect x="22" y="22" width="14" height="22" rx="2" fill="#8a5a3c"/><rect x="6" y="12" width="11" height="10" rx="1.5" fill="#9fd0f5"/><rect x="41" y="12" width="11" height="10" rx="1.5" fill="#9fd0f5"/></g>
+          <g transform="translate(160 82)"><rect width="46" height="34" rx="3" fill="#fbfaf6"/><path d="M-5 3 23 -19 51 3Z" fill="#c9553d"/><rect x="17" y="16" width="12" height="18" rx="2" fill="#8a5a3c"/></g>
+          <path d="M20 128H300" stroke="#fff" stroke-width="2" stroke-dasharray="6 5"/>
+          <circle cx="238" cy="96" r="14" fill="#5f9d4a"/><rect x="236" y="104" width="4" height="14" fill="#7b5a3c"/>
+          <circle cx="130" cy="104" r="9" fill="#6fae57"/>
+        </svg>
+        <div class="p-5">
+          <h3 class="mb-1.5 text-base font-semibold text-ink">Residential</h3>
+          <p class="m-0 text-sm text-muted">House plots across the suburbs, priced per perch from what similar plots are listed for.</p>
+        </div>
+      </div>
+
+      <div class="surface-card overflow-hidden">
+        <svg viewBox="0 0 320 170" class="block h-auto w-full" role="img" aria-label="Commercial buildings along a main road">
+          <rect width="320" height="170" fill="#e6ecf7"/>
+          <rect x="30" y="40" width="70" height="100" rx="3" fill="#9fb3d1"/>
+          <rect x="110" y="20" width="80" height="120" rx="3" fill="#7f97bd"/>
+          <rect x="200" y="56" width="90" height="84" rx="3" fill="#b3c3dc"/>
+          <g fill="#e8f1fb">
+            <rect x="42" y="54" width="14" height="12" rx="1.5"/><rect x="72" y="54" width="14" height="12" rx="1.5"/>
+            <rect x="42" y="78" width="14" height="12" rx="1.5"/><rect x="72" y="78" width="14" height="12" rx="1.5"/>
+            <rect x="124" y="34" width="16" height="12" rx="1.5"/><rect x="158" y="34" width="16" height="12" rx="1.5"/>
+            <rect x="124" y="58" width="16" height="12" rx="1.5"/><rect x="158" y="58" width="16" height="12" rx="1.5"/>
+            <rect x="124" y="82" width="16" height="12" rx="1.5"/><rect x="158" y="82" width="16" height="12" rx="1.5"/>
+            <rect x="214" y="70" width="18" height="12" rx="1.5"/><rect x="258" y="70" width="18" height="12" rx="1.5"/>
+          </g>
+          <rect x="210" y="104" width="70" height="16" rx="2" fill="#eb6834"/>
+          <rect x="0" y="140" width="320" height="30" fill="#8d9199"/>
+          <path d="M0 155H320" stroke="#f6efe0" stroke-width="2.5" stroke-dasharray="14 12"/>
+        </svg>
+        <div class="p-5">
+          <h3 class="mb-1.5 text-base font-semibold text-ink">Commercial</h3>
+          <p class="m-0 text-sm text-muted">Road-front and town-centre land, where access and nearby services matter most.</p>
+        </div>
+      </div>
+
+      <div class="surface-card overflow-hidden">
+        <svg viewBox="0 0 320 170" class="block h-auto w-full" role="img" aria-label="Paddy fields with coconut palms">
+          <rect width="320" height="170" fill="#e3f3fb"/>
+          <path d="M0 76C80 64 170 70 320 60V170H0Z" fill="#b9dc8f"/>
+          <g stroke="#94c56a" stroke-width="3">
+            <path d="M0 96C90 88 200 90 320 82"/><path d="M0 114C90 106 200 108 320 100"/>
+            <path d="M0 132C90 124 200 126 320 118"/><path d="M0 150C90 142 200 144 320 136"/>
+          </g>
+          <path d="M0 122C80 116 160 120 320 110" stroke="#7cc0f0" stroke-width="6" fill="none" stroke-opacity=".7"/>
+          <g stroke="#6b4f33" stroke-width="4" stroke-linecap="round"><path d="M62 78C64 60 60 44 56 30"/><path d="M262 70C258 54 262 40 268 26"/></g>
+          <g stroke="#4d8a3b" stroke-width="4" stroke-linecap="round" fill="none">
+            <path d="M56 30C44 24 34 26 28 34M56 30C66 22 78 22 86 30M56 30C50 18 52 10 58 6M56 30C62 20 70 16 78 16"/>
+            <path d="M268 26C256 20 246 22 240 30M268 26C278 18 290 18 298 26M268 26C262 14 264 6 270 2M268 26C274 16 282 12 290 12"/>
+          </g>
+        </svg>
+        <div class="p-5">
+          <h3 class="mb-1.5 text-base font-semibold text-ink">Agricultural</h3>
+          <p class="m-0 text-sm text-muted">Paddy and coconut land on the city's edge &mdash; often low-lying, so the flood record matters.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{# -------------------------------------------------------------- features #}
+<section class="mx-auto my-16 max-w-[1000px] px-5">
+  <h2 class="mb-8 text-center text-2xl font-bold text-ink sm:text-3xl">What you get</h2>
+  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+    <div class="surface-card p-5">
+      <div class="mb-3 flex h-9 w-9 items-center justify-center rounded-md bg-accent-soft text-accent">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M12 21s-7-6.1-7-11.2A7 7 0 0 1 19 9.8C19 14.9 12 21 12 21Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><circle cx="12" cy="9.8" r="2.4" stroke="currentColor" stroke-width="1.7"/></svg>
+      </div>
+      <h3 class="mb-1.5 text-base font-semibold text-ink">Click-to-price</h3>
+      <p class="m-0 text-sm text-muted">Click a point or draw a plot on the map. The division, area, and environmental profile are resolved automatically.</p>
+    </div>
+    <div class="surface-card p-5">
+      <div class="mb-3 flex h-9 w-9 items-center justify-center rounded-md bg-accent-soft text-accent">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M12 3s6 6.8 6 11.2a6 6 0 1 1-12 0C6 9.8 12 3 12 3Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+      </div>
+      <h3 class="mb-1.5 text-base font-semibold text-ink">Past flooding, from official records</h3>
+      <p class="m-0 text-sm text-muted">Next to every estimate: whether the GN division was inside the Survey Department's 2016, 2018 and 2025 flood maps, and the years the DMC recorded flooding there. Shown as information &mdash; not used to set the price.</p>
+    </div>
+    <div class="surface-card border-pro p-5">
+      <div class="mb-3 flex h-9 w-9 items-center justify-center rounded-md bg-pro-soft text-pro">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M4 21V10l8-6 8 6v11M4 21h16M9 21v-6h6v6" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+      </div>
+      <h3 class="mb-1.5 text-base font-semibold text-ink">Nearby amenities <span class="badge">Pro</span></h3>
+      <p class="m-0 text-sm text-muted">Schools, hospitals, supermarkets, banks, bus stops and rail stations near any plot, pulled live from OpenStreetMap.</p>
+    </div>
+    <div class="surface-card border-pro p-5">
+      <div class="mb-3 flex h-9 w-9 items-center justify-center rounded-md bg-pro-soft text-pro">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M7 3h7l5 5v13H7z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M14 3v5h5M9.5 13h5M9.5 16.5h5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+      </div>
+      <h3 class="mb-1.5 text-base font-semibold text-ink">Dashboard, history &amp; PDF reports <span class="badge">Pro</span></h3>
+      <p class="m-0 text-sm text-muted">Every estimate is saved, summarised in charts on your dashboard, and exportable as a shareable PDF report.</p>
+    </div>
+  </div>
+</section>
+
+{# ---------------------------------------------------------- data sources #}
+<section class="mx-auto mb-16 max-w-[1000px] px-5">
+  <p class="mb-4 text-center text-xs font-semibold uppercase tracking-wide text-muted">Built on open and official data</p>
+  <div class="flex flex-wrap justify-center gap-2.5">
+    {% for s in ['Ikman.lk land listings', 'Landsat 8/9', 'Sentinel-1 SAR', 'Copernicus DEM', 'JRC Surface Water', 'OpenStreetMap', 'Survey Department of Sri Lanka', 'Disaster Management Centre'] %}
+    <span class="rounded-full border border-line bg-card px-3.5 py-1.5 text-xs font-medium text-ink">{{ s }}</span>
+    {% endfor %}
+  </div>
+</section>
+
+{# ------------------------------------------------------------------- CTA #}
+<section class="mx-5 mb-16 sm:mx-auto sm:max-w-[1000px]">
+  <div class="overflow-hidden rounded-[22px] bg-accent px-6 py-12 text-center text-white shadow-lg" style="background-image:linear-gradient(135deg,#1d4ed8,#2563eb 55%,#1baf7a)">
+    <h2 class="mb-2 text-2xl font-bold sm:text-3xl">Price your first plot in under a minute.</h2>
+    <p class="mx-auto mb-6 max-w-md text-sm text-white/85">Free to try, no card required. Estimate only, not a valuation.</p>
+    <a class="btn bg-white px-5 py-2.5 font-semibold text-accent-dark hover:bg-white/90" href="{{ url_for('auth.signup_form') }}">Create your account</a>
+  </div>
+</section>
+
+</div>
+{% endblock %}

@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Privacy Policy — Colombo Land Price Estimator{% endblock %}
+
+{% block content %}
+<section class="mx-auto max-w-2xl">
+  <h1 class="mb-1 text-2xl font-bold text-ink">Privacy Policy</h1>
+  <p class="alert alert-warn my-3.5">
+    This is a general-purpose draft, not legal advice — replace the bracketed
+    placeholders and have someone qualified review it before relying on it
+    for a real, paying product.
+  </p>
+  <p class="mb-6 text-sm text-muted">Last updated: [date]</p>
+
+  <h2 class="mb-2 mt-7 text-base font-semibold text-ink">1. What we collect</h2>
+  <ul class="list-disc pl-5 leading-relaxed text-ink">
+    <li>Account info: email, name, and (if you use Google sign-in) your Google account ID. Passwords are stored as one-way hashes, never in plain text.</li>
+    <li>Estimate history: the divisions, plot sizes, land types, and prices you look up, tied to your account, so your dashboard and PDF exports work.</li>
+    <li>Basic technical data: IP address (used for rate-limiting and abuse prevention), and a session cookie that keeps you logged in.</li>
+    <li>Billing: if you subscribe to Pro, Stripe handles and stores your payment details — we only receive your subscription status, not your card number.</li>
+  </ul>
+
+  <h2 class="mb-2 mt-7 text-base font-semibold text-ink">2. How we use it</h2>
+  <p class="leading-relaxed text-ink">
+    To provide the service (run estimates, enforce free-plan limits, show your
+    history), to process payments via Stripe, to send account-related emails
+    (like password resets), and to keep the service secure and working.
+  </p>
+
+  <h2 class="mb-2 mt-7 text-base font-semibold text-ink">3. Who we share it with</h2>
+  <ul class="list-disc pl-5 leading-relaxed text-ink">
+    <li><strong>Stripe</strong> — payment processing, if you subscribe.</li>
+    <li><strong>Google</strong> — only if you choose "Sign in with Google."</li>
+    <li><strong>OpenStreetMap's Overpass API</strong> — receives the coordinates you look up when viewing nearby amenities; no account information is sent.</li>
+    <li>Our hosting provider, to run the service. We don't sell your data.</li>
+  </ul>
+
+  <h2 class="mb-2 mt-7 text-base font-semibold text-ink">4. Data retention</h2>
+  <p class="leading-relaxed text-ink">
+    We keep account and estimate data while your account is active. Contact
+    us to request deletion of your account and associated data.
+  </p>
+
+  <h2 class="mb-2 mt-7 text-base font-semibold text-ink">5. Your rights</h2>
+  <p class="leading-relaxed text-ink">
+    You can request a copy of your data, ask us to correct it, or ask us to
+    delete your account, by contacting [your contact email].
+  </p>
+
+  <h2 class="mb-2 mt-7 text-base font-semibold text-ink">6. Cookies</h2>
+  <p class="leading-relaxed text-ink">
+    We use a session cookie to keep you logged in and a CSRF-protection
+    cookie for security. We don't use third-party advertising or tracking
+    cookies.
+  </p>
+
+  <h2 class="mb-2 mt-7 text-base font-semibold text-ink">7. Security</h2>
+  <p class="leading-relaxed text-ink">
+    Passwords are hashed, not stored in plain text. [Add details about
+    HTTPS/transport security once deployed.]
+  </p>
+
+  <h2 class="mb-2 mt-7 text-base font-semibold text-ink">8. Changes</h2>
+  <p class="leading-relaxed text-ink">This policy may be updated from time to time; check back periodically.</p>
+
+  <h2 class="mb-2 mt-7 text-base font-semibold text-ink">9. Contact</h2>
+  <p class="leading-relaxed text-ink">Questions about this policy: [your contact email].</p>
+</section>
+{% endblock %}

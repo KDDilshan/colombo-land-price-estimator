@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="csrf-token" content="{{ csrf_token() }}">
+<title>{% block title %}Colombo Land Price Estimator{% endblock %}</title>
+
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%231d4ed8'/%3E%3Ctext x='50' y='71' font-size='58' font-family='Arial,sans-serif' font-weight='700' fill='white' text-anchor='middle'%3EC%3C/text%3E%3C/svg%3E">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="{{ url_for('static', filename='tailwind.css') }}">
+{% block head %}{% endblock %}
+
+<script>
+  /* Applied before first paint (not deferred) so the page never flashes the
+     wrong theme. Falls back to the OS preference when nothing is saved. */
+  (function () {
+    try {
+      var saved = localStorage.getItem('theme');
+      var theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', theme);
+    } catch (e) {}
+  })();
+</script>
+</head>
+<body class="font-sans text-[15px] leading-relaxed antialiased">
+
+<nav class="relative flex items-center justify-between gap-3 border-b border-line bg-card px-5 py-3.5">
+  <a class="font-bold text-ink no-underline" href="{{ url_for('main.landing') }}">Colombo Land Price Estimator</a>
+
+  <button id="nav-toggle" class="icon-btn sm:hidden" type="button" aria-label="Menu" aria-expanded="false">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+  </button>
+
+  <div class="hidden items-center gap-5 sm:flex" id="nav-links">
+    {% if current_user.is_authenticated %}
+      <a class="nav-link" href="{{ url_for('main.app_tool') }}">Estimate</a>
+      <a class="nav-link" href="{{ url_for('dashboard.index') }}">Dashboard</a>
+      <a class="nav-link" href="{{ url_for('dashboard.account') }}">Account</a>
+      {% if current_user.is_admin %}<a class="nav-link" href="{{ url_for('admin.index') }}">Admin</a>{% endif %}
+      <form class="m-0 inline" method="post" action="{{ url_for('auth.logout') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="link-btn">Log out</button>
+      </form>
+    {% else %}
+      <a class="nav-link" href="{{ url_for('billing.pricing') }}">Pricing</a>
+      <a class="nav-link" href="{{ url_for('auth.login_form') }}">Log in</a>
+      <a class="btn btn-primary px-3.5 py-1.5" href="{{ url_for('auth.signup_form') }}">Sign up</a>
+    {% endif %}
+
+    <button id="theme-toggle" class="icon-btn" type="button" aria-label="Toggle dark mode">
+      <svg class="dark:hidden" width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4.5" stroke="currentColor" stroke-width="1.7"/><path d="M12 2.5v2.5M12 19v2.5M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2.5 12H5M19 12h2.5M4.2 19.8L6 18M18 6l1.8-1.8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+      <svg class="hidden dark:block" width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M20 14.2A8.5 8.5 0 1 1 9.8 4 6.8 6.8 0 0 0 20 14.2Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+    </button>
+  </div>
+</nav>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div class="mx-auto flex max-w-[1080px] flex-col gap-2 px-5 pt-3">
+    {% for category, msg in messages %}
+      <div class="flash {{ 'flash-error' if category == 'error' else 'flash-info' }}">
+        <span class="flex-none text-[13px]" aria-hidden="true">{{ '⚠' if category == 'error' else '✓' if category == 'info' else '•' }}</span>
+        <span class="flex-1">{{ msg }}</span>
+        <button class="flash-close" type="button" aria-label="Dismiss">&times;</button>
+      </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+{% endwith %}
+
+<main class="mx-auto max-w-[1080px] px-5 py-8 pb-16 has-[#app-shell]:max-w-none has-[#app-shell]:px-0 has-[#app-shell]:py-0 has-[#landing]:max-w-none has-[#landing]:px-0 has-[#landing]:py-0">
+{% block content %}{% endblock %}
+</main>
+
+<footer class="border-t border-line bg-card-alt">
+  <div class="mx-auto max-w-[1080px] px-5 py-10">
+    <div class="flex flex-col gap-8 sm:flex-row sm:justify-between">
+      <div class="max-w-xs">
+        <a class="text-sm font-bold text-ink no-underline" href="{{ url_for('main.landing') }}">Colombo Land Price Estimator</a>
+        <p class="mt-2 text-sm leading-relaxed text-muted">
+          Algorithmic land-price estimates for Colombo district, with past
+          flooding shown from official Survey Department and DMC records.
+        </p>
+      </div>
+      <div class="flex gap-10 sm:gap-14">
+        <div>
+          <h3 class="mb-3 text-xs font-semibold uppercase tracking-wide text-muted">Product</h3>
+          <ul class="flex flex-col gap-2.5 text-sm">
+            <li><a class="text-ink hover:text-accent" href="{{ url_for('billing.pricing') }}">Pricing</a></li>
+            <li><a class="text-ink hover:text-accent" href="{{ url_for('main.model_notes') }}">Model notes</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="mb-3 text-xs font-semibold uppercase tracking-wide text-muted">Legal</h3>
+          <ul class="flex flex-col gap-2.5 text-sm">
+            <li><a class="text-ink hover:text-accent" href="{{ url_for('main.terms') }}">Terms</a></li>
+            <li><a class="text-ink hover:text-accent" href="{{ url_for('main.privacy') }}">Privacy</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <p class="mt-8 border-t border-line pt-5 text-xs text-muted">Estimate only, not a valuation.</p>
+  </div>
+</footer>
+
+<script src="{{ url_for('static', filename='site.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

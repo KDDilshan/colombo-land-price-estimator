@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Terms of Service — Colombo Land Price Estimator{% endblock %}
+
+{% block content %}
+<section class="mx-auto max-w-2xl">
+  <h1 class="mb-1 text-2xl font-bold text-ink">Terms of Service</h1>
+  <p class="alert alert-warn my-3.5">
+    This is a general-purpose draft, not legal advice — replace the bracketed
+    placeholders and have someone qualified review it before relying on it
+    for a real, paying product.
+  </p>
+  <p class="mb-6 text-sm text-muted">Last updated: [date]</p>
+
+  <h2 class="mb-2 mt-7 text-base font-semibold text-ink">1. The service</h2>
+  <p class="leading-relaxed text-ink">
+    Colombo Land Price Estimator ("the service") provides algorithmic estimates
+    of land prices in Colombo, Sri Lanka, based on a machine-learning model.
+    <strong>Estimates are informational only and are not a professional
+    valuation.</strong> Do not rely on them as the sole basis for a purchase,
+    sale, loan, or legal decision — consult a licensed valuer for that.
+  </p>
+
+  <h2 class="mb-2 mt-7 text-base font-semibold text-ink">2. Accounts</h2>
+  <p class="leading-relaxed text-ink">
+    You need an account to use the estimator. You're responsible for keeping
+    your login credentials secure and for all activity under your account.
+    Tell us if you believe your account has been compromised.
+  </p>
+
+  <h2 class="mb-2 mt-7 text-base font-semibold text-ink">3. Plans and billing</h2>
+  <p class="leading-relaxed text-ink">
+    A Free plan and a paid Pro plan are offered, as described on the
+    <a class="text-accent hover:text-accent-dark" href="{{ url_for('billing.pricing') }}">pricing page</a>. Pro
+    subscriptions are billed on a recurring basis through Stripe, our
+    third-party payment processor — we never see or store your full card
+    details. Subscriptions renew automatically until cancelled; cancel any
+    time from your account's billing portal, effective at the end of the
+    current billing period. [Add your refund policy here.]
+  </p>
+
+  <h2 class="mb-2 mt-7 text-base font-semibold text-ink">4. Acceptable use</h2>
+  <p class="leading-relaxed text-ink">
+    Don't attempt to bypass usage limits, scrape the service at scale,
+    reverse-engineer the model, or use it in a way that disrupts the service
+    for others. We may suspend accounts that abuse the service.
+  </p>
+
+  <h2 class="mb-2 mt-7 text-base font-semibold text-ink">5. Disclaimers and limitation of liability</h2>
+  <p class="leading-relaxed text-ink">
+    The service is provided "as is," without warranty of any kind. To the
+    maximum extent permitted by law, [Your Company Name] is not liable for
+    any decision made in reliance on an estimate, or for indirect,
+    incidental, or consequential damages arising from use of the service.
+  </p>
+
+  <h2 class="mb-2 mt-7 text-base font-semibold text-ink">6. Third-party services</h2>
+  <p class="leading-relaxed text-ink">
+    The service uses Stripe for payments, Google for optional sign-in, and
+    the OpenStreetMap Overpass API to look up nearby amenities. Each is
+    governed by its own terms and privacy policy.
+  </p>
+
+  <h2 class="mb-2 mt-7 text-base font-semibold text-ink">7. Changes</h2>
+  <p class="leading-relaxed text-ink">
+    These terms may be updated from time to time; continued use of the
+    service after a change constitutes acceptance of the new terms.
+  </p>
+
+  <h2 class="mb-2 mt-7 text-base font-semibold text-ink">8. Governing law</h2>
+  <p class="leading-relaxed text-ink">[Your jurisdiction / governing law goes here.]</p>
+
+  <h2 class="mb-2 mt-7 text-base font-semibold text-ink">9. Contact</h2>
+  <p class="leading-relaxed text-ink">Questions about these terms: [your contact email].</p>
+</section>
+{% endblock %}

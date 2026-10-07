@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Model notes — Colombo Land Price Estimator{% endblock %}
+
+{% block content %}
+<section class="mx-auto max-w-2xl">
+  <h1 class="mb-1 text-2xl font-bold text-ink">Model notes</h1>
+  <p class="mb-6 text-sm text-muted">What the model is trained on, what it's tested against, and what didn't make the cut.</p>
+
+  <h2 class="mb-2 mt-7 text-base font-semibold text-ink">What powers the estimates</h2>
+  <p class="leading-relaxed text-ink">
+    A tuned XGBoost model trained on real listing data across {{ division_count }} GN
+    divisions in Colombo district. Inputs include plot size, land type,
+    proximity to schools/hospitals/banks/transport, and environmental and
+    spatial variables (elevation, surface water occurrence, height above
+    nearest drainage, distance to stream and to the Kelani, Sentinel-1 SAR
+    flooded fraction, and Landsat NDVI). The model uses these as associations
+    with asking prices; it makes no causal claim about any of them.
+  </p>
+  <p class="leading-relaxed text-ink">
+    The <strong>past flooding</strong> panel is separate from the model. It reports,
+    for the GN division clicked, the share inside the Survey Department of Sri
+    Lanka's flood maps for May 2016, May 2018 and Cyclone Ditwah (November 2025), and the
+    years the Disaster Management Centre's DesInventar database (1974&ndash;2019)
+    records flooding there. It is descriptive, not a prediction, and a GN with no
+    record may still flood.
+  </p>
+  <ul class="list-disc pl-5 leading-relaxed text-ink">
+    <li>Median error: {{ accuracy.median_ape }}% &middot; Mean error: {{ accuracy.mean_ape }}%</li>
+    <li>R&sup2; {{ accuracy.r2_known }}% on 1,234 held-out listings (random 80/20 split)</li>
+  </ul>
+
+  <p class="leading-relaxed text-ink">
+    The model covers Colombo district only. A point outside the
+    {{ division_count }} modelled GN divisions is priced from Colombo-wide
+    average values and is flagged as less reliable wherever it is shown.
+  </p>
+</section>
+{% endblock %}
