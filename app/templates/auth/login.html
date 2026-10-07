@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Log in — Colombo Land Price Estimator{% endblock %}
+
+{% block content %}
+<section class="surface-card mx-auto max-w-sm p-7">
+  <h1 class="mb-5 text-xl font-bold text-ink">Log in</h1>
+
+  <a class="btn btn-google mb-1" href="{{ url_for('auth.login_google') }}">Log in with Google</a>
+  <p class="my-2.5 text-center text-xs text-muted">or</p>
+
+  <form class="flex flex-col gap-1" method="post" action="{{ url_for('auth.login') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <label class="field-label mt-2.5" for="email">Email</label>
+    <input class="field-input" type="email" id="email" name="email" required autocomplete="email">
+
+    <label class="field-label mt-2.5" for="password">Password</label>
+    <input class="field-input" type="password" id="password" name="password" required autocomplete="current-password">
+
+    <button class="btn btn-primary mt-4" type="submit">Log in</button>
+  </form>
+
+  <p class="mt-4 text-center text-sm text-muted">
+    <a class="text-accent hover:text-accent-dark" href="{{ url_for('auth.reset_request_form') }}">Forgot your password?</a> &middot;
+    Don't have an account? <a class="text-accent hover:text-accent-dark" href="{{ url_for('auth.signup_form') }}">Sign up</a>
+  </p>
+</section>
+{% endblock %}

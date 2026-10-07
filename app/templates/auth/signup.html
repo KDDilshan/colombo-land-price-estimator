@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Sign up — Colombo Land Price Estimator{% endblock %}
+
+{% block content %}
+<section class="surface-card mx-auto max-w-sm p-7">
+  <h1 class="mb-5 text-xl font-bold text-ink">Create your account</h1>
+
+  <a class="btn btn-google mb-1" href="{{ url_for('auth.login_google') }}">Sign up with Google</a>
+  <p class="my-2.5 text-center text-xs text-muted">or</p>
+
+  <form class="flex flex-col gap-1" method="post" action="{{ url_for('auth.signup') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <label class="field-label mt-2.5" for="name">Name</label>
+    <input class="field-input" type="text" id="name" name="name" autocomplete="name">
+
+    <label class="field-label mt-2.5" for="email">Email</label>
+    <input class="field-input" type="email" id="email" name="email" required autocomplete="email">
+
+    <label class="field-label mt-2.5" for="password">Password</label>
+    <input class="field-input" type="password" id="password" name="password" required minlength="8" autocomplete="new-password">
+    <p class="field-hint">At least 8 characters.</p>
+
+    <button class="btn btn-primary mt-4" type="submit">Create account</button>
+  </form>
+
+  <p class="mt-4 text-center text-sm text-muted">Already have an account? <a class="text-accent hover:text-accent-dark" href="{{ url_for('auth.login_form') }}">Log in</a></p>
+</section>
+{% endblock %}

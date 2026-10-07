@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Reset password — Colombo Land Price Estimator{% endblock %}
+
+{% block content %}
+<section class="surface-card mx-auto max-w-sm p-7">
+  <h1 class="mb-5 text-xl font-bold text-ink">Reset your password</h1>
+  <form class="flex flex-col gap-1" method="post" action="{{ url_for('auth.reset_request') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label class="field-label mt-2.5" for="email">Email</label>
+    <input class="field-input" type="email" id="email" name="email" required autocomplete="email">
+    <button class="btn btn-primary mt-4" type="submit">Send reset link</button>
+  </form>
+  <p class="mt-4 text-center text-sm text-muted"><a class="text-accent hover:text-accent-dark" href="{{ url_for('auth.login_form') }}">Back to log in</a></p>
+</section>
+{% endblock %}
