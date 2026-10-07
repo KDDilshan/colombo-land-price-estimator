@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.venv/
+.env
+*.db
+instance/
+catboost_info/
+*.bak
+.ipynb_checkpoints/
+*.egg-info/
+node_modules/
+.demo_user
+.claude/
